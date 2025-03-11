@@ -10,13 +10,19 @@ class Constants(Enum):
     NM = 1e-9 # nm to m
     EPSILON_0 = 8.85e-12
 
+"""
+References:
+- Johnson, P. B., & Christy, R. W. (1972). Optical Constants of the Noble Metals. Physical Review B, 6(12), 4370-4379.
+- Rakic, A. D., Djurišic, A. B., Elazar, J. M., & Majewski, M. L. (1998). Optical Properties of Metallic Films for Vertical-Cavity Optoelectronic Devices. Applied Optics, 37(22), 5271-5283.
+- Ordal, M. A., Bell, R. J., Alexander, R. W., Long, L. L., & Querry, M. R. (1985). Optical Properties of the Metals Al, Co, Cu, Au, Fe, Pb, Ni, Pd, Pt, Ag, Ti, and W in the Infrared and Far Infrared. Applied Optics, 24(24), 4493-4499.
+"""
 
 class Metals(Enum):
-    GOLD = (9.0, 0.07, 9.5)
-    SILVER = (9.2, 0.02, 4.0)
-    COPPER = (10.8, 0.08, 10.0)
-    ALUMINUM = (15.0, 0.15, 1.0)
-    TUNGSTEN = (8.8, 0.35, 15.0)
+    GOLD = (9.03, 0.071, 9.84)
+    SILVER = (9.17, 0.021, 5.0)
+    COPPER = (10.83, 0.086, 10.85)
+    ALUMINUM = (14.98, 0.047, 1.24)
+    TUNGSTEN = (13.22, 0.064, 4.1)
 
     def __init__(self, plasmaFrequency, gamma, epsilonB):
         self.plasmaFrequency = plasmaFrequency
@@ -73,6 +79,8 @@ class MetallicSlab:
 
 
     def _integrand(self, kParallel):
+        # At the moment this is an inefficient calculation as only two values will be different
+        # But the matrix shape is mantained for future development
         k = self.omega/Constants.C_MS.value
         kz1 = self._calculateKzi(kParallel, self.epsilonList[1])
         rs = self._calculateTotalReflection(kParallel, self.polarizationList[0])
@@ -90,31 +98,33 @@ class MetallicSlab:
 
         return (kParallel * expFactor / kz1) * (termS + termP)
 
-    def _integrateMatrix(self, func, a, b, limit):
+    def _integrateMatrix(self, func, a, b, eps_rel, limit):
         result = np.zeros((3, 3), dtype=complex)
         for i in range(3):
             for j in range(3):
-                real_part = spi.quad(lambda x: np.real(func(x)[i, j]), a, b, limit=limit, epsabs=1e-6)[0]
-                imag_part = spi.quad(lambda x: np.imag(func(x)[i, j]), a, b, limit=limit, epsabs=1e-6)[0]
+                real_part = spi.quad(lambda x: np.real(func(x)[i, j]), a, b, limit=limit, epsrel=eps_rel)[0]
+                imag_part = spi.quad(lambda x: np.imag(func(x)[i, j]), a, b, limit=limit, epsrel=eps_rel)[0]
                 result[i, j] = real_part + 1j * imag_part
         return result
 
-    def calculateGreenFunctionReflected(self, cutOff=10, limit=1000):
+    def calculateGreenFunctionReflected(self, cutOff=10, eps_rel=1.49e-8, limit=1000):
         k = self.omega/Constants.C_MS.value
         kSingularity = k
-        delta = kSingularity*1e-6
+        delta = kSingularity*1e-8
 
-        integral1 = self._integrateMatrix(self._integrand, 0, kSingularity-delta, limit)
-        integral2 = self._integrateMatrix(self._integrand,kSingularity+delta , cutOff/self.z, limit)
+        integral1 = self._integrateMatrix(self._integrand, 0, kSingularity-delta, eps_rel, limit)
+        integral2 = self._integrateMatrix(self._integrand,kSingularity+delta , cutOff/self.z, eps_rel, limit)
 
         return integral1 + integral2
+
+        return integral
 
     def calculateImaginaryGreenFunctionHomogeneusSpace(self, epsilon):
         k1 = self._calculateKzi(0, epsilon)
         return (2 / 3) * k1 ** 3 # This comes from the limit computed by hand
 
-    def calculateNormalizedGreenFunctionReflected(self, cutOff=10, limit=1000):
-        GReflected = self.calculateGreenFunctionReflected(cutOff)
+    def calculateNormalizedGreenFunctionReflected(self, cutOff=10, eps_rel=1.49e-8, limit=1000):
+        GReflected = self.calculateGreenFunctionReflected(cutOff, eps_rel, limit)
         GHomogeneusImaginary = self.calculateImaginaryGreenFunctionHomogeneusSpace(self.epsilonList[1])
 
         return GReflected / GHomogeneusImaginary
