@@ -19,7 +19,7 @@ metal = Metals.SILVER
 plasmon_resonance = metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1)
 
 # Thickness values to study
-thickness_values = [5, 10, 20, 30, 50, 70]  # in nm
+thickness_values = [1, 5, 10, 20, 30]  # in nm
 thickness_values = [t * Constants.NM.value for t in thickness_values]
 
 # Create directories for saving data and plots
@@ -37,7 +37,7 @@ y_min, y_max = float('inf'), float('-inf')
 
 for t, color in zip(thickness_values, colors):
     print(f"Computing: thickness {t / Constants.NM.value} nm")
-    omega_values = np.linspace(0.8 * plasmon_resonance, 5 * plasmon_resonance, 300) * Constants.EV.value
+    omega_values = np.linspace(0.1 * plasmon_resonance, 1.5 * plasmon_resonance, 300) * Constants.EV.value
 
     Gxx_values = np.zeros(len(omega_values), dtype=complex)
     Gzz_values = np.zeros(len(omega_values), dtype=complex)
@@ -88,15 +88,15 @@ fig.legend(handles=axes[0, 0].get_legend_handles_labels()[0], loc='upper center'
 # Adjust axes limits
 for ax in axes.flatten():
     ax.grid(True)
-    ax.set_xlim(0.8 * plasmon_resonance, 5 * plasmon_resonance)
+    ax.set_xlim(0.1 * plasmon_resonance, 1.5 * plasmon_resonance)
     ax.grid(True)
-    ax.set_xlim(0.8 * plasmon_resonance, 5 * plasmon_resonance)  # Adjust x-axis
+    ax.set_xlim(0.1 * plasmon_resonance, 1.5 * plasmon_resonance)  # Adjust x-axis
       # Adjust y-axis automatically
 
 plt.tight_layout(rect=tuple((0.0, 0.0, 1.0, 0.92)))
 
 # Save plot
-plt.savefig(f"./plots/{metal.name}_thickness_variation_broader.png")
+plt.savefig(f"./plots/{metal.name}_thickness_variation_first_part.png")
 
 end = time.time()
 elapsed_time = end - start

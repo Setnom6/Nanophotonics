@@ -16,7 +16,7 @@ limit = 100
 
 # Select a single metal and thickness
 metal = Metals.SILVER
-t = 20 * Constants.NM.value  # Fixed thickness
+t = 0.01 * Constants.NM.value  # Fixed thickness
 plasmon_resonance = metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1)
 
 # Create directories for saving data and plots
@@ -24,8 +24,8 @@ os.makedirs("./data/", exist_ok=True)
 os.makedirs("./plots/", exist_ok=True)
 
 # Frequency range
-min_omega = 0.95 * plasmon_resonance
-max_omega = 1.05 * plasmon_resonance
+min_omega = 0.005 * plasmon_resonance
+max_omega = 1.5 * plasmon_resonance
 omega_values = np.linspace(min_omega, max_omega, 200) * Constants.EV.value
 
 # Arrays to store results
@@ -41,7 +41,7 @@ for i, omega in enumerate(omega_values):
     G = slab.calculateNormalizedGreenFunctionReflected(cutOff=cutOff, eps_rel=eps_rel, limit=limit)
     Gxx_values[i] = G[0, 0]  # Gxx = Gyy
     Gzz_values[i] = G[2, 2]  # Gzz
-    if omega > 0.5*plasmon_resonance*Constants.EV.value and count==0:
+    if omega > 0.05*plasmon_resonance*Constants.EV.value and count==0:
         index_good_omega = i
         count += 1
 
@@ -88,7 +88,7 @@ axes[1].set_ylim(1.2*y_min_imag,1.2*y_max_imag)
 plt.tight_layout()  # Ajusta el diseño para evitar solapamientos
 
 # Save plot
-plt.savefig(f"./plots/{metal.name}_thickness_{int(t / Constants.NM.value)}nm_real_imag_green_function_zoom.png")
+plt.savefig(f"./plots/{metal.name}_thickness_{int(t / Constants.NM.value)}nm_real_imag_green_function_whole.png")
 
 end = time.time()
 elapsed_time = end - start

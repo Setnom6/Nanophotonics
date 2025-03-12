@@ -12,14 +12,12 @@ class Constants(Enum):
 
 """
 References:
-- Johnson, P. B., & Christy, R. W. (1972). Optical Constants of the Noble Metals. Physical Review B, 6(12), 4370-4379.
-- Rakic, A. D., Djurišic, A. B., Elazar, J. M., & Majewski, M. L. (1998). Optical Properties of Metallic Films for Vertical-Cavity Optoelectronic Devices. Applied Optics, 37(22), 5271-5283.
-- Ordal, M. A., Bell, R. J., Alexander, R. W., Long, L. L., & Querry, M. R. (1985). Optical Properties of the Metals Al, Co, Cu, Au, Fe, Pb, Ni, Pd, Pt, Ag, Ti, and W in the Infrared and Far Infrared. Applied Optics, 24(24), 4493-4499.
+For SILVER: https://nano-optics.colorado.edu/wp-content/uploads/2020/06/Yang_PhysRevB_15_MainText.pdf
 """
 
 class Metals(Enum):
     GOLD = (9.03, 0.071, 9.84)
-    SILVER = (9.17, 0.021, 5.0)
+    SILVER = (8.9, 0.039, 5.0)
     COPPER = (10.83, 0.086, 10.85)
     ALUMINUM = (14.98, 0.047, 1.24)
     TUNGSTEN = (13.22, 0.064, 4.1)
