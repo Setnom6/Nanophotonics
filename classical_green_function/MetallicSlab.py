@@ -115,8 +115,6 @@ class MetallicSlab:
 
         return integral1 + integral2
 
-        return integral
-
     def calculateImaginaryGreenFunctionHomogeneusSpace(self, epsilon):
         k1 = self._calculateKzi(0, epsilon)
         return (2 / 3) * k1 ** 3 # This comes from the limit computed by hand
