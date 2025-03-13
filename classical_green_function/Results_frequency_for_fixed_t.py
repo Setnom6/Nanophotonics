@@ -8,7 +8,7 @@ start = time.time()
 
 # Fixed parameters
 epsilon1 = 1.0
-epsilon3 = 1.0
+epsilon3 = 3.0
 z = 5 * Constants.NM.value  # Distance from the source
 cutOff = 15
 eps_rel = 1e-6
@@ -16,7 +16,7 @@ limit = 100
 
 # Select a single metal and thickness
 metal = Metals.SILVER
-t = 0.01 * Constants.NM.value  # Fixed thickness
+t = 1 * Constants.NM.value  # Fixed thickness
 plasmon_resonance = metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1)
 
 # Create directories for saving data and plots
@@ -24,7 +24,7 @@ os.makedirs("./data/", exist_ok=True)
 os.makedirs("./plots/", exist_ok=True)
 
 # Frequency range
-min_omega = 0.005 * plasmon_resonance
+min_omega = 0.05 * plasmon_resonance
 max_omega = 1.5 * plasmon_resonance
 omega_values = np.linspace(min_omega, max_omega, 200) * Constants.EV.value
 
