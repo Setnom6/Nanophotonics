@@ -9,6 +9,7 @@ class Constants(Enum):
     EV = 1.5192678e15 # eV to s^-1
     NM = 1e-9 # nm to m
     EPSILON_0 = 8.85e-12
+    HBAR = 1.0545718e-34 # J·s
 
 """
 References:
@@ -46,6 +47,13 @@ class MetallicSlab:
         self.z = z
         self.epsilonList = [Constants.EPSILON_0.value , epsilon1, self._calculateEpsilonDrude(), epsilon3]
         self.polarizationList = ['s', 'p']
+
+    def setOmega(self, omega):
+        """
+        Update the frequency and recalculate dependent properties.
+        """
+        self.omega = omega
+        self.epsilonList[2] = self._calculateEpsilonDrude()  # Recalculate epsilonDrude
 
     def _calculateEpsilonDrude(self) -> complex:
         return self.epsilonB - (self.plasmaFrequency ** 2) / (self.omega ** 2 + 1j * self.omega * self.gamma)

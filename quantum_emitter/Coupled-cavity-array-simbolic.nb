@@ -1,0 +1,499 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     18997,        491]
+NotebookOptionsPosition[     17565,        461]
+NotebookOutlinePosition[     17901,        476]
+CellTagsIndexPosition[     17858,        473]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"Clear", "[", "\"\<Global`*\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[402]:=",ExpressionUUID->"8310de3e-07bc-485b-84e8-17a803fec76b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "Number", " ", "of", " ", "sites", " ", "in", " ", "the", " ", "chain", 
+    " ", 
+    RowBox[{"(", 
+     RowBox[{"small", " ", "for", " ", "symbolic", " ", "diagonalization"}], 
+     ")"}]}], "*)"}], 
+  RowBox[{
+   RowBox[{
+    RowBox[{"NN", "=", "4"}], ";"}], "\n", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Construction", " ", "of", " ", "the", " ", "Hamiltonian", " ", "H_B", 
+     " ", 
+     RowBox[{"(", 
+      RowBox[{"First", " ", "Order"}], ")"}]}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"HB", "=", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"Which", "[", 
+        RowBox[{
+         RowBox[{"i", "\[Equal]", "j"}], ",", "omegaA", ",", 
+         RowBox[{"(*", 
+          RowBox[{"Diagonal", " ", "terms"}], "*)"}], 
+         RowBox[{
+          RowBox[{"j", "\[Equal]", 
+           RowBox[{"i", "+", "1"}]}], "||", 
+          RowBox[{"i", "\[Equal]", 
+           RowBox[{"j", "+", "1"}]}]}], ",", 
+         RowBox[{"-", "J"}], ",", 
+         RowBox[{"(*", 
+          RowBox[{"First", " ", "neighbor", " ", "coupling"}], "*)"}], 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "1"}], "&&", 
+          RowBox[{"j", "\[Equal]", "NN"}]}], ",", 
+         RowBox[{"-", "J"}], ",", 
+         RowBox[{"(*", 
+          RowBox[{"Periodic", " ", "boundary", " ", "conditions"}], "*)"}], 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "NN"}], "&&", 
+          RowBox[{"j", "\[Equal]", "1"}]}], ",", 
+         RowBox[{"-", "J"}], ",", "True", ",", "0"}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", "NN"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"j", ",", "NN"}], "}"}]}], "]"}]}], ";"}], "\n", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Construction", " ", "of", " ", "the", " ", "Hamiltonian", " ", "H_B2", 
+     " ", 
+     RowBox[{"(", 
+      RowBox[{"Second", " ", "Order"}], ")"}]}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"HB2", "=", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"Which", "[", 
+        RowBox[{
+         RowBox[{"i", "\[Equal]", "j"}], ",", "omegaA", ",", 
+         RowBox[{"(*", 
+          RowBox[{"Diagonal", " ", "terms"}], "*)"}], 
+         RowBox[{
+          RowBox[{"j", "\[Equal]", 
+           RowBox[{"i", "+", "1"}]}], "||", 
+          RowBox[{"i", "\[Equal]", 
+           RowBox[{"j", "+", "1"}]}]}], ",", 
+         RowBox[{"-", "J"}], ",", 
+         RowBox[{"(*", 
+          RowBox[{"First", " ", "neighbor", " ", "coupling"}], "*)"}], 
+         RowBox[{
+          RowBox[{"j", "\[Equal]", 
+           RowBox[{"i", "+", "2"}]}], "||", 
+          RowBox[{"i", "\[Equal]", 
+           RowBox[{"j", "-", "2"}]}]}], ",", 
+         RowBox[{"-", "J2"}], ",", 
+         RowBox[{"(*", 
+          RowBox[{"Second", " ", "neighbor", " ", "coupling"}], "*)"}], 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "1"}], "&&", 
+          RowBox[{"j", "\[Equal]", "NN"}]}], ",", 
+         RowBox[{"-", "J"}], ",", 
+         RowBox[{"(*", 
+          RowBox[{
+           RowBox[{"Periodic", " ", "BCs", " ", "for", " ", "first"}], "-", 
+           RowBox[{"order", " ", "coupling"}]}], "*)"}], 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "NN"}], "&&", 
+          RowBox[{"j", "\[Equal]", "1"}]}], ",", 
+         RowBox[{"-", "J"}], ",", 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "1"}], "&&", 
+          RowBox[{"j", "\[Equal]", 
+           RowBox[{"NN", "-", "1"}]}]}], ",", 
+         RowBox[{"-", "J2"}], ",", 
+         RowBox[{"(*", 
+          RowBox[{
+           RowBox[{"Periodic", " ", "BCs", " ", "for", " ", "second"}], "-", 
+           RowBox[{"order", " ", "coupling"}]}], "*)"}], 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", 
+           RowBox[{"NN", "-", "1"}]}], "&&", 
+          RowBox[{"j", "\[Equal]", "1"}]}], ",", 
+         RowBox[{"-", "J2"}], ",", 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "2"}], "&&", 
+          RowBox[{"j", "\[Equal]", "NN"}]}], ",", 
+         RowBox[{"-", "J2"}], ",", 
+         RowBox[{
+          RowBox[{"i", "\[Equal]", "NN"}], "&&", 
+          RowBox[{"j", "\[Equal]", "2"}]}], ",", 
+         RowBox[{"-", "J2"}], ",", "True", ",", "0"}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", "NN"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"j", ",", "NN"}], "}"}]}], "]"}]}], ";"}], "\n", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Basis", " ", "change", " ", "to", " ", "momentum", " ", "space"}], 
+    "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"kVals", "=", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"2", " ", "Pi", " ", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"m", "-", "1"}], ")"}], "/", "NN"}]}], ",", 
+       RowBox[{"{", 
+        RowBox[{"m", ",", "1", ",", "NN"}], "}"}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Symbolic", " ", "diagonalization"}], "*)"}], "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"eigenvalsHB", ",", "eigenvecsHB"}], "}"}], "=", 
+     RowBox[{"Eigensystem", "[", "HB", "]"}]}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"eigenvalsHB2", ",", "eigenvecsHB2"}], "}"}], "=", 
+     RowBox[{"Eigensystem", "[", "HB2", "]"}]}], ";"}], "\[IndentingNewLine]",
+    "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Ensure", " ", "sorted", " ", "order", " ", "for", " ", "correct", " ", 
+     "comparison"}], "*)"}], "\n", 
+   RowBox[{
+    RowBox[{"eigenvalsHBsorted", "=", 
+     RowBox[{"Sort", "[", "eigenvalsHB", "]"}]}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"eigenvalsHB2sorted", "=", 
+     RowBox[{"Sort", "[", "eigenvalsHB2", "]"}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Theoretical", " ", "dispersion", " ", "relations"}], "*)"}], 
+   "\n", 
+   RowBox[{
+    RowBox[{"omegaK1", "=", 
+     RowBox[{"omegaA", "-", 
+      RowBox[{"2", " ", "J", " ", 
+       RowBox[{"Cos", "[", "kVals", "]"}]}]}]}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"omegaK2", "=", 
+     RowBox[{"omegaA", "-", 
+      RowBox[{"2", " ", "J", " ", 
+       RowBox[{"Cos", "[", "kVals", "]"}]}], "-", 
+      RowBox[{"2", " ", "J2", " ", 
+       RowBox[{"Cos", "[", 
+        RowBox[{"2", " ", "kVals"}], "]"}]}]}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Consistency", " ", "checks"}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Check1", "=", 
+     RowBox[{"Simplify", "[", 
+      RowBox[{"eigenvalsHBsorted", "-", 
+       RowBox[{"Sort", "[", "omegaK1", "]"}]}], "]"}]}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"Check2", "=", 
+     RowBox[{"Simplify", "[", 
+      RowBox[{"eigenvalsHB2sorted", "-", "omegaK2"}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Display", " ", "results"}], "*)"}], "\n", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Eigenvalues of H_B (symbolic): \>\"", ",", 
+      RowBox[{"N", "[", "eigenvalsHBsorted", "]"}]}], "]"}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Eigenvectors of H_B (symbolic): \>\"", ",", 
+      RowBox[{"N", "[", "eigenvecsHB", "]"}]}], "]"}], ";"}], 
+   "\[IndentingNewLine]", "\n", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Eigenvalues of H_B2 (symbolic): \>\"", ",", 
+      RowBox[{"N", "[", "eigenvalsHB2sorted", "]"}]}], "]"}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Eigenvectors of H_B2 (symbolic): \>\"", ",", 
+      RowBox[{"N", "[", "eigenvecsHB2", "]"}]}], "]"}], ";"}], 
+   "\[IndentingNewLine]", "\n", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Check1 (eigenvalsHB - omegaK1): \>\"", ",", 
+      RowBox[{"N", "[", "Check1", "]"}]}], "]"}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Check2 (eigenvalsHB2 - omegaK2 from HB2k): \>\"", ",", 
+      RowBox[{"N", "[", "Check2", "]"}]}], "]"}], ";"}]}]}]], "Input",
+ CellChangeTimes->{{3.9507687072622423`*^9, 3.950768753844076*^9}, {
+   3.9507687865971203`*^9, 3.9507688225667343`*^9}, {3.950768862263982*^9, 
+   3.950768862646047*^9}, 3.950768968912065*^9, 3.9507691228470488`*^9, 
+   3.950769354649355*^9, {3.950769579038281*^9, 3.95076976221242*^9}, 
+   3.950769851417224*^9, {3.950769948898538*^9, 3.950769968909709*^9}, 
+   3.9507700902080393`*^9, 3.950770148228732*^9, 3.9507701951067047`*^9, 
+   3.950770308601789*^9, {3.95077062832589*^9, 3.950770661625885*^9}, {
+   3.950770704707515*^9, 3.95077070651579*^9}, {3.950770943286285*^9, 
+   3.95077098799653*^9}, {3.950773257757955*^9, 
+   3.950773266208661*^9}},ExpressionUUID->"0788323f-470e-4a4e-ad0c-\
+766380eb8b3a"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"0", ",", 
+   FractionBox["\[Pi]", "2"], ",", "\[Pi]", ",", 
+   FractionBox[
+    RowBox[{"3", " ", "\[Pi]"}], "2"]}], "}"}]], "Output",
+ CellChangeTimes->{{3.9507709581889553`*^9, 3.950770992258605*^9}},
+ CellLabel->
+  "Out[406]=",ExpressionUUID->"0c7ec8ac-96b5-4d47-8565-d6cb8b7e379d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Eigenvalues of H_B (symbolic): \"\>", "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{"omegaA", ",", "omegaA", ",", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", "2.`"}], " ", "J"}], "+", "omegaA"}], ",", 
+     RowBox[{
+      RowBox[{"2.`", " ", "J"}], "+", "omegaA"}]}], "}"}]}],
+  SequenceForm[
+  "Eigenvalues of H_B (symbolic): ", {$CellContext`omegaA, \
+$CellContext`omegaA, (-2.) $CellContext`J + $CellContext`omegaA, 
+    2. $CellContext`J + $CellContext`omegaA}],
+  Editable->False]], "Print",
+ CellChangeTimes->{
+  3.9507693611932592`*^9, 3.950769583356875*^9, 3.950769867393427*^9, 
+   3.950769919170244*^9, 3.950769969665106*^9, 3.950770093628961*^9, 
+   3.950770151839995*^9, 3.9507702000045147`*^9, 3.9507703114611053`*^9, {
+   3.9507706319404287`*^9, 3.950770665435589*^9}, {3.950770709898123*^9, 
+   3.9507707294735327`*^9}, {3.950770958202024*^9, 3.950770992266469*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[403]:=",ExpressionUUID->"e25b2d2a-d6ea-4e5c-8fa6-8b7e2fbf5979"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Eigenvectors of H_B (symbolic): \"\>", "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"0.`", ",", 
+       RowBox[{"-", "1.`"}], ",", "0.`", ",", "1.`"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"-", "1.`"}], ",", "0.`", ",", "1.`", ",", "0.`"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"1.`", ",", "1.`", ",", "1.`", ",", "1.`"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"-", "1.`"}], ",", "1.`", ",", 
+       RowBox[{"-", "1.`"}], ",", "1.`"}], "}"}]}], "}"}]}],
+  SequenceForm[
+  "Eigenvectors of H_B (symbolic): ", {{0., -1., 0., 1.}, {-1., 0., 1., 0.}, {
+   1., 1., 1., 1.}, {-1., 1., -1., 1.}}],
+  Editable->False]], "Print",
+ CellChangeTimes->{
+  3.9507693611932592`*^9, 3.950769583356875*^9, 3.950769867393427*^9, 
+   3.950769919170244*^9, 3.950769969665106*^9, 3.950770093628961*^9, 
+   3.950770151839995*^9, 3.9507702000045147`*^9, 3.9507703114611053`*^9, {
+   3.9507706319404287`*^9, 3.950770665435589*^9}, {3.950770709898123*^9, 
+   3.9507707294735327`*^9}, {3.950770958202024*^9, 3.950770992267261*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[403]:=",ExpressionUUID->"5ae64de1-8ea9-4164-b60a-6460ae7445cb"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Eigenvalues of H_B2 (symbolic): \"\>", "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", "2.`"}], " ", "J"}], "-", 
+      RowBox[{"1.`", " ", "J2"}], "+", "omegaA"}], ",", 
+     RowBox[{
+      RowBox[{"2.`", " ", "J"}], "-", 
+      RowBox[{"1.`", " ", "J2"}], "+", "omegaA"}], ",", 
+     RowBox[{"J2", "+", "omegaA"}], ",", 
+     RowBox[{"J2", "+", "omegaA"}]}], "}"}]}],
+  SequenceForm[
+  "Eigenvalues of H_B2 (symbolic): ", {(-2.) $CellContext`J - 
+    1. $CellContext`J2 + $CellContext`omegaA, 2. $CellContext`J - 
+    1. $CellContext`J2 + $CellContext`omegaA, $CellContext`J2 + \
+$CellContext`omegaA, $CellContext`J2 + $CellContext`omegaA}],
+  Editable->False]], "Print",
+ CellChangeTimes->{
+  3.9507693611932592`*^9, 3.950769583356875*^9, 3.950769867393427*^9, 
+   3.950769919170244*^9, 3.950769969665106*^9, 3.950770093628961*^9, 
+   3.950770151839995*^9, 3.9507702000045147`*^9, 3.9507703114611053`*^9, {
+   3.9507706319404287`*^9, 3.950770665435589*^9}, {3.950770709898123*^9, 
+   3.9507707294735327`*^9}, {3.950770958202024*^9, 3.950770992268107*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[403]:=",ExpressionUUID->"713327c7-202a-4197-9bd6-a8a8ca0f8f55"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Eigenvectors of H_B2 (symbolic): \"\>", "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"1.`", ",", "1.`", ",", "1.`", ",", "1.`"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"-", "1.`"}], ",", "1.`", ",", 
+       RowBox[{"-", "1.`"}], ",", "1.`"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"0.`", ",", 
+       RowBox[{"-", "1.`"}], ",", "0.`", ",", "1.`"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"-", "1.`"}], ",", "0.`", ",", "1.`", ",", "0.`"}], "}"}]}], 
+    "}"}]}],
+  SequenceForm[
+  "Eigenvectors of H_B2 (symbolic): ", {{1., 1., 1., 1.}, {-1., 1., -1., 
+   1.}, {0., -1., 0., 1.}, {-1., 0., 1., 0.}}],
+  Editable->False]], "Print",
+ CellChangeTimes->{
+  3.9507693611932592`*^9, 3.950769583356875*^9, 3.950769867393427*^9, 
+   3.950769919170244*^9, 3.950769969665106*^9, 3.950770093628961*^9, 
+   3.950770151839995*^9, 3.9507702000045147`*^9, 3.9507703114611053`*^9, {
+   3.9507706319404287`*^9, 3.950770665435589*^9}, {3.950770709898123*^9, 
+   3.9507707294735327`*^9}, {3.950770958202024*^9, 3.950770992268642*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[403]:=",ExpressionUUID->"27e29c3c-a1db-4c3c-bba0-6ff60f59ad37"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Check1 (eigenvalsHB - omegaK1): \"\>", "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{"0.`", ",", "0.`", ",", "0.`", ",", "0.`"}], "}"}]}],
+  SequenceForm["Check1 (eigenvalsHB - omegaK1): ", {0., 0., 0., 0.}],
+  Editable->False]], "Print",
+ CellChangeTimes->{
+  3.9507693611932592`*^9, 3.950769583356875*^9, 3.950769867393427*^9, 
+   3.950769919170244*^9, 3.950769969665106*^9, 3.950770093628961*^9, 
+   3.950770151839995*^9, 3.9507702000045147`*^9, 3.9507703114611053`*^9, {
+   3.9507706319404287`*^9, 3.950770665435589*^9}, {3.950770709898123*^9, 
+   3.9507707294735327`*^9}, {3.950770958202024*^9, 3.950770992269162*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[403]:=",ExpressionUUID->"21355083-1098-4cce-90e8-078fe1911192"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Check2 (eigenvalsHB2 - omegaK2 from HB2k): \"\>", 
+   "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{"J2", ",", 
+     RowBox[{
+      RowBox[{"2.`", " ", "J"}], "-", 
+      RowBox[{"3.`", " ", "J2"}]}], ",", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", "2.`"}], " ", "J"}], "+", 
+      RowBox[{"3.`", " ", "J2"}]}], ",", 
+     RowBox[{
+      RowBox[{"-", "1.`"}], " ", "J2"}]}], "}"}]}],
+  SequenceForm[
+  "Check2 (eigenvalsHB2 - omegaK2 from HB2k): ", {$CellContext`J2, 
+    2. $CellContext`J - 3. $CellContext`J2, (-2.) $CellContext`J + 
+    3. $CellContext`J2, -$CellContext`J2}],
+  Editable->False]], "Print",
+ CellChangeTimes->{
+  3.9507693611932592`*^9, 3.950769583356875*^9, 3.950769867393427*^9, 
+   3.950769919170244*^9, 3.950769969665106*^9, 3.950770093628961*^9, 
+   3.950770151839995*^9, 3.9507702000045147`*^9, 3.9507703114611053`*^9, {
+   3.9507706319404287`*^9, 3.950770665435589*^9}, {3.950770709898123*^9, 
+   3.9507707294735327`*^9}, {3.950770958202024*^9, 3.9507709922696257`*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[403]:=",ExpressionUUID->"686e3f36-9983-4f3b-a1d5-d6536efb07d7"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.950770390607195*^9, 
+  3.950770410533276*^9}},ExpressionUUID->"bcb09745-0bf9-4147-8c09-\
+72e9994ef8a5"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Check2 new (eigenvalsHB2 - omegaK2 from HB2k): \"\>", 
+   "\[InvisibleSpace]", "Check2_new"}],
+  SequenceForm["Check2 new (eigenvalsHB2 - omegaK2 from HB2k): ", 
+   Pattern[$CellContext`Check2, 
+    Blank[$CellContext`new]]],
+  Editable->False]], "Print",
+ CellChangeTimes->{{3.950770391584944*^9, 3.9507703960944977`*^9}},
+ CellLabel->
+  "Durante la evaluaci\[OAcute]n de \
+In[249]:=",ExpressionUUID->"444525d3-16af-4946-9716-820c9e3ac6a0"]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{
+  3.950770420673353*^9},ExpressionUUID->"e565f159-3bd2-48e3-9bab-\
+c685c0c03823"]
+},
+WindowSize->{808, 911},
+WindowMargins->{{556, Automatic}, {48, Automatic}},
+FrontEndVersion->"12.0 para Linux x86 (64-bit) (April 8, 2019)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 156, 3, 53, "Input",ExpressionUUID->"8310de3e-07bc-485b-84e8-17a803fec76b"],
+Cell[CellGroupData[{
+Cell[739, 27, 8763, 227, 1531, "Input",ExpressionUUID->"0788323f-470e-4a4e-ad0c-766380eb8b3a"],
+Cell[9505, 256, 325, 8, 54, "Output",ExpressionUUID->"0c7ec8ac-96b5-4d47-8565-d6cb8b7e379d"],
+Cell[CellGroupData[{
+Cell[9855, 268, 1059, 23, 26, "Print",ExpressionUUID->"e25b2d2a-d6ea-4e5c-8fa6-8b7e2fbf5979"],
+Cell[10917, 293, 1270, 29, 50, "Print",ExpressionUUID->"5ae64de1-8ea9-4164-b60a-6460ae7445cb"],
+Cell[12190, 324, 1278, 28, 50, "Print",ExpressionUUID->"713327c7-202a-4197-9bd6-a8a8ca0f8f55"],
+Cell[13471, 354, 1277, 30, 50, "Print",ExpressionUUID->"27e29c3c-a1db-4c3c-bba0-6ff60f59ad37"],
+Cell[14751, 386, 795, 15, 26, "Print",ExpressionUUID->"21355083-1098-4cce-90e8-078fe1911192"],
+Cell[15549, 403, 1175, 28, 26, "Print",ExpressionUUID->"686e3f36-9983-4f3b-a1d5-d6536efb07d7"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16773, 437, 152, 3, 33, "Input",ExpressionUUID->"bcb09745-0bf9-4147-8c09-72e9994ef8a5"],
+Cell[16928, 442, 490, 11, 26, "Print",ExpressionUUID->"444525d3-16af-4946-9716-820c9e3ac6a0"]
+}, Open  ]],
+Cell[17433, 456, 128, 3, 33, "Input",ExpressionUUID->"e565f159-3bd2-48e3-9bab-c685c0c03823"]
+}
+]
+*)
+
