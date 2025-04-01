@@ -9,7 +9,7 @@ def lorentzian_spectrum_normalized(g, k, omega_a, omega_0, omega):
     return (g**2 / (2 * np.pi) * k / ((omega - omega_a)**2 + (k / 2)**2)) / decay_rate_at_omega_0
 
 def kernel_integrand(omega, g, k, omega_a, omega_0, tau):
-    return lorentzian_spectrum_normalized(g, k, omega_a, omega_0, omega) * np.exp(1j * (omega_0 - omega) * tau)
+    return lorentzian_spectrum_normalized(g, k, omega_a, omega_0, omega) * np.exp(-1j * (omega_0 - omega) * tau)
 
 def compute_integral_kernel(g, k, omega_a, omega_0, tau):
     real_part = spi.quad(lambda x: np.real(kernel_integrand(x, g, k, omega_a, omega_0, tau)),

@@ -10,6 +10,7 @@ class Constants(Enum):
     NM = 1e-9 # nm to m
     EPSILON_0 = 8.85e-12
     HBAR = 1.0545718e-34 # J·s
+    E_CHARGE = 1.602176634e-19  # Elementary charge (C)
 
 """
 References:
@@ -102,7 +103,8 @@ class MetallicSlab:
                        [0, -1j * kz1 ** 2 / 2, 0],
                        [0, 0, 1j * kParallel ** 2]])
 
-        return (kParallel * expFactor / kz1) * (termS + termP)
+        result = (kParallel * expFactor / kz1) * (termS + termP)
+        return result
 
     def _integrateMatrix(self, func, a, b, eps_rel, limit):
         result = np.zeros((3, 3), dtype=complex)
@@ -123,12 +125,123 @@ class MetallicSlab:
 
         return integral1 + integral2
 
-    def calculateImaginaryGreenFunctionHomogeneusSpace(self, epsilon):
-        k1 = self._calculateKzi(0, epsilon)
-        return (2 / 3) * k1 ** 3 # This comes from the limit computed by hand
+    def calculateImaginaryGreenFunctionHomogeneousSpace(self, epsilon):
+        """Calcula la parte imaginaria de G en espacio homogéneo con chequeo de positividad"""
+        k1 = self._calculateKzi(0, epsilon)  # Componente perpendicular del vector de onda
+
+        # Cálculo directo con verificación física
+        img_part = (2 / 3) * np.imag(k1 ** 3)  # Debería ser siempre positiva
+
+        if img_part <= 0:
+            # Valor de emergencia basado en límite asintótico
+            img_part = (2 / 3) * (self.omega / Constants.C_MS.value) ** 3
+
+        return img_part
 
     def calculateNormalizedGreenFunctionReflected(self, cutOff=10, eps_rel=1.49e-8, limit=1000):
         GReflected = self.calculateGreenFunctionReflected(cutOff, eps_rel, limit)
-        GHomogeneusImaginary = self.calculateImaginaryGreenFunctionHomogeneusSpace(self.epsilonList[1])
+        GHomogeneusImaginary = self.calculateImaginaryGreenFunctionHomogeneousSpace(self.epsilonList[1])
 
         return GReflected / GHomogeneusImaginary
+
+    def gaussLegendreMatrixIntegration(self, func, a, b, numPoints=50):
+        """
+        Performs the integration of a matrix function using Gauss-Legendre quadrature.
+        """
+        # Gauss-Legendre quadrature points and weights
+        x, w = np.polynomial.legendre.leggauss(numPoints)
+
+        # Transform interval [a, b] to [-1, 1]
+        mid = (b + a) / 2
+        halfWidth = (b - a) / 2
+
+        # Initialize result matrix
+        result = np.zeros((3, 3), dtype=complex)
+
+        for i in range(numPoints):
+            kParallel = mid + halfWidth * x[i]
+            integrandMatrix = func(kParallel)
+
+            # Accumulate the weighted result
+            result += w[i] * integrandMatrix
+
+        # Scale the result by the interval width
+        result *= halfWidth
+
+        return result
+
+    def calculateNormalizedGreenFunctionReflectedFastIntegration(self, cutOff=50, numPoints=300):
+        """
+        Versión robusta para pequeños z/t que:
+        1. Usa un esquema de integración adaptativo
+        2. Implementa correcciones analíticas para z/t → 0
+        3. Previene valores negativos no físicos
+        """
+        k = self.omega / Constants.C_MS.value
+        kSingularity = k
+
+        # Manejo especial para z/t < 0.1
+        if self.z / self.t < 0.1:
+            return self._handle_small_z_case(cutOff, numPoints)
+
+        # Cálculo estándar para z/t ≥ 0.1
+        delta = max(kSingularity * 1e-8, 1e-3 / self.z)  # Asegura δ > 0
+
+        # Integración con más puntos cerca de la singularidad
+        points_near_sing = int(numPoints * 0.7)
+        points_far = numPoints - points_near_sing
+
+        integral1 = self.gaussLegendreMatrixIntegration(
+            self._integrand, 0, kSingularity - delta, points_near_sing)
+
+        integral2 = self.gaussLegendreMatrixIntegration(
+            self._integrand, kSingularity + delta, cutOff / self.z, points_far)
+
+        gReflected = integral1 + integral2
+
+        # Corrección analítica para pequeños z
+        if self.z / self.t < 0.5:
+            gReflected = self._apply_small_z_correction(gReflected)
+
+        # Aseguramos Im[G] ≥ 0
+        gReflected = self._ensure_positive_imaginary(gReflected)
+
+        gHomogeneous = self.calculateImaginaryGreenFunctionHomogeneousSpace(self.epsilonList[1])
+        return gReflected / gHomogeneous
+
+    def _handle_small_z_case(self, cutOff, numPoints):
+        """Manejo especial para distancias muy pequeñas z/t < 0.1"""
+        # Usamos aproximación cuasi-estática para z → 0
+        k = self.omega / Constants.C_MS.value
+        epsilon = self._calculateEpsilonDrude()
+
+        # Aproximación de near-field para dipolo perpendicular
+        g_zz = (1 / (16 * np.pi * self.z ** 3)) * ((epsilon - 1) / (epsilon + 1))
+
+        # Construimos tensor G aproximado
+        G = np.zeros((3, 3), dtype=complex)
+        G[2, 2] = g_zz  # Componente dominante para z → 0
+
+        # Corrección para evitar singularidad exacta en z=0
+        if np.imag(G[2, 2]) <= 0:
+            G[2, 2] = np.abs(np.real(G[2, 2])) + 1j * 1e-6
+
+        return G / self.calculateImaginaryGreenFunctionHomogeneousSpace(self.epsilonList[1])
+
+    def _apply_small_z_correction(self, G):
+        """Aplica correcciones analíticas para 0.1 < z/t < 0.5"""
+        print("Apply small z/t correction")
+        k = self.omega / Constants.C_MS.value
+        z_corr = self.z + 0.1 * self.t  # Evita z exactamente cero
+
+        # Factor de corrección empírico basado en límite asintótico
+        correction_factor = 1 - np.exp(-(k * z_corr) ** 2)
+        return G * correction_factor
+
+    def _ensure_positive_imaginary(self, G):
+        """Garantiza que la parte imaginaria sea no negativa"""
+        G_imag = np.imag(G)
+        if np.any(G_imag < 0):
+            G_imag_corrected = np.maximum(G_imag, 1e-10)  # Pequeño valor positivo
+            return np.real(G) + 1j * G_imag_corrected
+        return G

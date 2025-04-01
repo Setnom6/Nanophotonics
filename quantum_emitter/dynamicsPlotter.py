@@ -14,17 +14,17 @@ start_time = time.time()
 # Parameters for the simulation
 kindOfSpectralDensity = SpectralDensityType.LORENTZIAN
 cutOff = 10  # Cut-off parameter for integration
-numPoints = 100  # Number of points for Gauss-Legendre quadrature
+numPoints = 50  # Number of points for Gauss-Legendre quadrature
 
 # Parameters for the MetallicSlab spectral density
-z = 5 * Constants.NM.value # Distance
-t = 20 * Constants.NM.value # Thickness of the slab
+z = 5  # Distance
+t = 20  # Thickness of the slab
 metal = Metals.SILVER
 metallicSlab = MetallicSlab(metal=metal, epsilon1=1.0, epsilon3=1.0,
                             omega=10, t=t, z=z)
-plasmonResonance = (metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1)) * Constants.EV.value
+plasmonResonance = (metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1))
 omega0 = plasmonResonance  # Set to plasmon resonance frequency
-dipoleMoment = 1.0 * Constants.E_CHARGE.value * Constants.NM.value
+dipoleMoment = 1.6e-28 / Constants.NM.value  # ~1 e·nm in C·m
 
 paramsMetallicSlab = {
     'metalSlab': metallicSlab,
@@ -44,18 +44,21 @@ paramsLorentzian = {
 emitterLorentzian = QuantumEmitter(SpectralDensityType.LORENTZIAN, paramsLorentzian, cutOff=cutOff, numPoints=numPoints)
 emitterMetallic = QuantumEmitter(SpectralDensityType.METALLIC_SLAB, paramsMetallicSlab, cutOff=cutOff, numPoints=numPoints)
 
-# Frequencies for comparison
-frequencies = np.linspace(0.5 * plasmonResonance, 1.5 * plasmonResonance, 300)
+# Times for comparison
+T = 50 / plasmonResonance  # Final time
+dt = 0.01 / plasmonResonance  # Time step
 
-# Compute spectra
-spectrumLorentzian = [emitterLorentzian.spectralDensity(omega) for omega in frequencies]
-spectrumMetallicSlab = [emitterMetallic.spectralDensity(omega) for omega in frequencies]
+# Compute probabilities
+timesLorentzian, probabilitiesLorentzian = emitterLorentzian.computeProbability(T, dt)
+timesMetallic, probabilitiesMetallicSlab = emitterMetallic.computeProbability(T, dt)
 
 # Plot comparison
-plt.plot(frequencies / Constants.EV.value, spectrumLorentzian, label='Lorentzian')
-plt.plot(frequencies / Constants.EV.value, spectrumMetallicSlab, label='Metallic Slab')
-plt.xlabel('Frequency (eV)')
-plt.ylabel('Spectral density')
+plt.plot(timesLorentzian, probabilitiesLorentzian, label='Lorentzian')
+plt.plot(timesMetallic, probabilitiesMetallicSlab, label='Metallic Slab')
+
+plt.xlabel('Time')
+plt.ylabel('Probability')
+
 plt.legend()
 
 # End timing
@@ -66,4 +69,5 @@ elapsedTime = end_time - start_time
 hours, rem = divmod(elapsedTime, 3600)
 minutes, seconds = divmod(rem, 60)
 print(f"Total execution time: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}")
+
 plt.show()
