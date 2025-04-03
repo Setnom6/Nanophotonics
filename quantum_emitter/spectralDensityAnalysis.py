@@ -22,52 +22,56 @@ def savePlotWithTimestamp(figure, baseName="spectral_density"):
 # Parameter configuration (using nm and eV)
 metal = Metals.SILVER
 slabThickness_nm = 20  # Thickness in nm
-emitterWavelength_nm = 300  # Wavelength in nm
+emitterWavelength_nm = 500  # Wavelength in nm
 dipoleMoment = 1.0  # in e·nm
+dipole = np.array([1, 1, 1])
 
 # Integration configuration
-cutOff = 20
-num_points = 100
+cutOff = [50, 10]
+numPoints = 1000
 
 # Convert to SI units for MetallicSlab
 slabThickness = slabThickness_nm * Constants.NM.value
 emitterWavelength = emitterWavelength_nm * Constants.NM.value
 
-# Calculate frequencies
-emitterEnergy_eV = (2 * np.pi * Constants.HBAR.value * Constants.C_MS.value) / (
-            emitterWavelength * Constants.E_CHARGE.value)
-emitterFrequency_SI = emitterEnergy_eV * Constants.EV.value  # in s^-1 for MetallicSlab
+# Calculate emitter frequency (eV)
+emitterFrequency = 1240 / emitterWavelength_nm  # eV
 
 # Calculate plasmon resonance frequency (in eV)
 plasmonResonance_eV = metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1)
 
 # Range of distances to explore (in nm)
-distances_nm = np.array([1, 5, 10])  # in nm
-distances = distances_nm * Constants.NM.value  # convert to m for MetallicSlab
+distances = np.concatenate([
+    np.array([0.1, 1, 5, 10, 20]),  # Short distances
+    np.array([0.5, 0.75, 1.0, 2.0]) * emitterWavelength_nm  # Long distances
+])
+
+distances = np.array([0.1, 1, 5, 10, 20])
 
 # Range of frequencies to evaluate (in eV)
-frequencies_eV = np.linspace(0.1 * emitterEnergy_eV, 3 * emitterEnergy_eV, 300)
+frequencies_eV = np.linspace(0.1 * emitterFrequency, 2 * emitterFrequency, 300)
 maxSpectralDensity = []
 
 plt.figure(figsize=(12, 8))
 
-for distance_nm, distance in zip(distances_nm, distances):
+for distance in distances:
     metallicSlab = MetallicSlab(metal=metal, epsilon1=1.0, epsilon3=1.0,
-                                omega=emitterFrequency_SI, t=slabThickness, z=distance)
+                                omega=emitterFrequency * Constants.EV.value,  # eV → s⁻¹
+                                t=slabThickness, z=distance*Constants.NM.value)
 
     params = {
         'metalSlab': metallicSlab,
-        'dipole': np.array([1, 1, 1]) * dipoleMoment,  # in e·nm
-        'omega0': emitterEnergy_eV  # in eV
+        'dipole': dipole * dipoleMoment,  # in e·nm
+        'omega0': emitterFrequency  # in eV
     }
 
     emitter = QuantumEmitter(SpectralDensityType.METALLIC_SLAB, params,
-                             cutOff=cutOff, numPoints=num_points)
+                             cutOff=cutOff, numPoints=numPoints)
 
     spectralDensity = [emitter.spectralDensity(omega_eV) for omega_eV in frequencies_eV]
 
     # Plot with distance in wavelength units
-    label = f'distance = {distance_nm / emitterWavelength_nm:.4f}λ'
+    label = f'distance = {distance / emitterWavelength_nm:.4f}λ'
     plt.plot(frequencies_eV, spectralDensity, label=label)
     maxSpectralDensity.append(np.max(spectralDensity))
 
@@ -78,15 +82,22 @@ plt.axvline(x=plasmonResonance_eV, color='gray', linestyle='--',
 plt.xlabel('Frequency (eV)')
 plt.ylabel('Normalized Spectral Density (Γ/Γ₀)')
 plt.title(
-    f'Normalized Spectral Density near Silver Slab\n(Thickness = {slabThickness_nm:.1f} nm, λ = {emitterWavelength_nm:.1f} nm)')
+    f'Normalized Spectral Density near Silver Slab\n(Thickness = {slabThickness_nm:.1f} nm, λ = {emitterWavelength_nm:.1f} nm, dipole = {tuple(dipole)} enm)')
 plt.legend()
 plt.grid(True)
 
+# Filter out NaN values from maxSpectralDensity
+maxSpectralDensity = np.array(maxSpectralDensity)
+maxSpectralDensity = maxSpectralDensity[~np.isnan(maxSpectralDensity)]  # Remove NaN values
+
+# Set y-axis limits
+if len(maxSpectralDensity) > 0:  # Ensure there are valid values
+    plt.ylim([0, np.max(maxSpectralDensity)])
 # Set y-axis limits
 plt.ylim([0, np.max(maxSpectralDensity)])
 
 # Save and show plot
-savePlotWithTimestamp(plt.gcf())
+savePlotWithTimestamp(plt.gcf(), "spectral_density_short_distances")
 
 # End timing
 end_time = time.time()

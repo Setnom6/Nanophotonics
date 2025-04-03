@@ -66,21 +66,26 @@ def compute_probability(g, k, omega_a, omega_0, T=10.0, dt=0.01, method="integra
     P_t = np.abs(c_e)**2
     return taus, P_t
 
-# Parameters
-g = 1
-k = 1
-delta = 0
-omega_a = 10
-omega_0 = omega_a - delta
 
-# Compute probability using both methods
-taus_integral, P_t_integral = compute_probability(g, k, omega_a, omega_0, method="integral")
-taus_analytical, P_t_analytical = compute_probability(g, k, omega_a, omega_0, method="analytical")
-
-# Plot Probability P(t) for both methods
+pars = [0.2, 0.5, 2.0]
 plt.figure(figsize=(10, 6))
-plt.plot(taus_integral, P_t_integral, label='Numerical Integral Kernel', color='b', linestyle='-')
-plt.plot(taus_analytical, P_t_analytical, label='Analytical Kernel', color='r', linestyle='--')
+for par in pars:
+    # Parameters
+    omega_a = 3.6334097851283813
+    delta = 3.6334097851283813 - 4.133333333333334
+    omega_0 = omega_a - delta
+    g = 0.2 * omega_0
+    k = par * omega_0
+
+
+    # Compute probability using both methods
+    taus_integral, P_t_integral = compute_probability(g, k, omega_a, omega_0, method="integral")
+    #taus_analytical, P_t_analytical = compute_probability(g, k, omega_a, omega_0, method="analytical")
+
+    # Plot Probability P(t) for both methods
+    plt.plot(taus_integral, P_t_integral, label=f'Numerical Integral Kernel parameter = {par}', linestyle='-')
+    #plt.plot(taus_analytical, P_t_analytical, label='Analytical Kernel', color='r', linestyle='--')
+
 plt.xlabel('Time')
 plt.ylabel('Probability $P(t)$')
 plt.title('Comparison of Probability Evolution Over Time')

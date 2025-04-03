@@ -172,76 +172,75 @@ class MetallicSlab:
 
     def calculateNormalizedGreenFunctionReflectedFastIntegration(self, cutOff=50, numPoints=300):
         """
-        Versión robusta para pequeños z/t que:
-        1. Usa un esquema de integración adaptativo
-        2. Implementa correcciones analíticas para z/t → 0
-        3. Previene valores negativos no físicos
+        Robust version for small z/t that:
+        1. Uses an adaptive integration scheme
+        2. Implements analytical corrections for z/t → 0
+        3. Prevents non-physical negative values
         """
         k = self.omega / Constants.C_MS.value
         kSingularity = k
 
-        # Manejo especial para z/t < 0.1
-        if self.z / self.t < 0.1:
-            return self._handle_small_z_case(cutOff, numPoints)
+        # Special handling for z/t < 0.1
+        """if self.z / self.t < 0.1:
+            return self._handleSmallZCase(cutOff, numPoints)"""
 
-        # Cálculo estándar para z/t ≥ 0.1
-        delta = max(kSingularity * 1e-8, 1e-3 / self.z)  # Asegura δ > 0
+        # Standard calculation for z/t ≥ 0.1
+        delta = max(kSingularity * 1e-8, 1e-3 / self.z)  # Ensures δ > 0
 
-        # Integración con más puntos cerca de la singularidad
-        points_near_sing = int(numPoints * 0.7)
-        points_far = numPoints - points_near_sing
+        # Integration with more points near the singularity
+        pointsNearSingularity = int(numPoints * 0.7)
+        pointsFar = numPoints - pointsNearSingularity
 
         integral1 = self.gaussLegendreMatrixIntegration(
-            self._integrand, 0, kSingularity - delta, points_near_sing)
+            self._integrand, 0, kSingularity - delta, pointsNearSingularity)
 
         integral2 = self.gaussLegendreMatrixIntegration(
-            self._integrand, kSingularity + delta, cutOff / self.z, points_far)
+            self._integrand, kSingularity + delta, cutOff / self.z, pointsFar)
 
         gReflected = integral1 + integral2
 
-        # Corrección analítica para pequeños z
-        if self.z / self.t < 0.5:
-            gReflected = self._apply_small_z_correction(gReflected)
+        # Analytical correction for small z
+        """if self.z / self.t < 0.5:
+            gReflected = self._applySmallZCorrection(gReflected)"""
 
-        # Aseguramos Im[G] ≥ 0
-        gReflected = self._ensure_positive_imaginary(gReflected)
+        # Ensure Im[G] ≥ 0
+        gReflected = self._ensurePositiveImaginary(gReflected)
 
         gHomogeneous = self.calculateImaginaryGreenFunctionHomogeneousSpace(self.epsilonList[1])
         return gReflected / gHomogeneous
 
-    def _handle_small_z_case(self, cutOff, numPoints):
-        """Manejo especial para distancias muy pequeñas z/t < 0.1"""
-        # Usamos aproximación cuasi-estática para z → 0
+    def _handleSmallZCase(self, cutOff, numPoints):
+        """Special handling for very small distances z/t < 0.1"""
+        # Use quasi-static approximation for z → 0
         k = self.omega / Constants.C_MS.value
         epsilon = self._calculateEpsilonDrude()
 
-        # Aproximación de near-field para dipolo perpendicular
-        g_zz = (1 / (16 * np.pi * self.z ** 3)) * ((epsilon - 1) / (epsilon + 1))
+        # Near-field approximation for perpendicular dipole
+        gZz = (1 / (16 * np.pi * self.z ** 3)) * ((epsilon - 1) / (epsilon + 1))
 
-        # Construimos tensor G aproximado
+        # Construct approximate G tensor
         G = np.zeros((3, 3), dtype=complex)
-        G[2, 2] = g_zz  # Componente dominante para z → 0
+        G[2, 2] = gZz  # Dominant component for z → 0
 
-        # Corrección para evitar singularidad exacta en z=0
+        # Correction to avoid exact singularity at z=0
         if np.imag(G[2, 2]) <= 0:
             G[2, 2] = np.abs(np.real(G[2, 2])) + 1j * 1e-6
 
         return G / self.calculateImaginaryGreenFunctionHomogeneousSpace(self.epsilonList[1])
 
-    def _apply_small_z_correction(self, G):
-        """Aplica correcciones analíticas para 0.1 < z/t < 0.5"""
-        print("Apply small z/t correction")
+    def _applySmallZCorrection(self, G):
+        """Applies analytical corrections for 0.1 < z/t < 0.5"""
         k = self.omega / Constants.C_MS.value
-        z_corr = self.z + 0.1 * self.t  # Evita z exactamente cero
+        zCorrected = self.z + 0.1 * self.t  # Avoids exactly zero z
 
-        # Factor de corrección empírico basado en límite asintótico
-        correction_factor = 1 - np.exp(-(k * z_corr) ** 2)
-        return G * correction_factor
+        # Empirical correction factor based on asymptotic limit
+        correctionFactor = 1 - np.exp(-(k * zCorrected) ** 2)
+        return G * correctionFactor
 
-    def _ensure_positive_imaginary(self, G):
-        """Garantiza que la parte imaginaria sea no negativa"""
-        G_imag = np.imag(G)
-        if np.any(G_imag < 0):
-            G_imag_corrected = np.maximum(G_imag, 1e-10)  # Pequeño valor positivo
-            return np.real(G) + 1j * G_imag_corrected
+    def _ensurePositiveImaginary(self, G):
+        """Ensures that the imaginary part is non-negative"""
+        gImaginary = np.imag(G)
+        if np.any(gImaginary < 0):
+            gImaginaryCorrected = np.maximum(gImaginary, 1e-10)  # Small positive value
+            return np.real(G) + 1j * gImaginaryCorrected
         return G

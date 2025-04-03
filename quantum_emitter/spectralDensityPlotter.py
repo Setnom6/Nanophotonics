@@ -13,8 +13,8 @@ start_time = time.time()
 
 # Parameters for the simulation
 kindOfSpectralDensity = SpectralDensityType.LORENTZIAN
-cutOff = 10  # Cut-off parameter for integration
-numPoints = 100  # Number of points for Gauss-Legendre quadrature
+cutOff = 50  # Cut-off parameter for integration
+numPoints = 500  # Number of points for Gauss-Legendre quadrature
 
 # Parameters for the MetallicSlab spectral density
 z = 5 * Constants.NM.value # Distance

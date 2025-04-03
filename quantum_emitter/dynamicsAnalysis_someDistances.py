@@ -33,30 +33,30 @@ def saveDataToJson(dataDict, baseName="simulation_data"):
 # Parameter configuration
 metal = Metals.SILVER
 slabThickness = 20  # nm
-emitterWavelength = 300  # nm
+emitterWavelength = 500  # nm
 dipoleMoment = 1.0  # e·nm
 plasmonResonance_eV = metal.plasmaFrequency / np.sqrt(metal.epsilonB + 1)
 
 # Integration configuration
-cutOff = 20
-numPoints = 100
+cutOff = [50, 5]
+numPoints = 500
 
 # Range of distances (nm)
 distances = np.concatenate([
-    np.array([1, 5, 10]),  # Short distances
-    np.array([0.1, 0.5, 1.0]) * emitterWavelength  # Long distances
+    np.array([0.1, 1, 5, 10, 20]),  # Short distances
+    np.array([0.5, 0.75, 1.0, 2.0]) * emitterWavelength # Long distances
 ])
 
-distances = np.array([1])
+distances = np.array([0.5, 0.75, 1.0, 2.0]) * emitterWavelength   # Short distances
 
 # Time configuration
-T = 10  # Units of 2π/ω0
+T = 30  # Units of 2π/ω0
 dt = 0.001
 
 # Calculate emitter frequency (eV)
-emitterEnergy_eV = (2 * np.pi * Constants.HBAR.value * Constants.C_MS.value) / (
-            emitterWavelength * Constants.NM.value * Constants.E_CHARGE.value)
-emitterFrequency = emitterEnergy_eV  # eV
+emitterFrequency = 1240 / emitterWavelength  # eV
+T = T / emitterFrequency
+dt = dt / emitterFrequency
 
 # Initialize results storage
 results = {
@@ -65,6 +65,9 @@ results = {
     "probabilities": [],
     "probabilities_lorentz": [],
     "probabilities_markov": [],
+    "lifetimes" : [],
+    "lifetimes_lorentz" : [],
+    "lifetimes_markov" : [],
     "parameters": {
         "slabThickness": slabThickness,
         "emitterWavelength": emitterWavelength,
@@ -105,8 +108,8 @@ for distance in distances:
         SpectralDensityType.LORENTZIAN,
         params={
             'omegaA': plasmonResonance_eV,  # Same omega0 as the real emitter
-            'g': 0.1 * plasmonResonance_eV,  # Typical coupling (adjust as needed)
-            'k': 0.05 * plasmonResonance_eV,  # Lorentzian width (kappa)
+            'g': 0.2 * plasmonResonance_eV,  # Typical coupling (Normalization cancels it)
+            'k': 0.5 * plasmonResonance_eV,  # Lorentzian width (kappa)
             'omega0': emitterFrequency  # Emitter frequency
         }
     )
@@ -133,6 +136,13 @@ for distance in distances:
     results["probabilities"].append(np.maximum(probabilities, 0))
     results["probabilities_lorentz"].append(probabilities_lorentz)  # New entry
     results["probabilities_markov"].append(probabilities_markov)    # New entry
+    tau = emitter.computeLifetime(times, probabilities)
+    tau_lorentz = emitter_lorentz.computeLifetime(times, probabilities_lorentz)
+    tau_markov = emitter_markov.computeLifetime(times, probabilities_markov)
+
+    results["lifetimes"].append(tau)
+    results["lifetimes_lorentz"].append(tau_lorentz)
+    results["lifetimes_markov"].append(tau_markov)
 
 # Convert to numpy arrays
 results["distances"] = np.array(results["distances"])
@@ -140,50 +150,69 @@ results["times"] = np.array(results["times"])
 results["probabilities"] = np.array(results["probabilities"])
 results["probabilities_lorentz"] = np.array(results["probabilities_lorentz"])
 results["probabilities_markov"] = np.array(results["probabilities_markov"])
+results["lifetimes"] = np.array(results["lifetimes"])
+results["lifetimes_lorentz"] = np.array(results["lifetimes_lorentz"])
+results["lifetimes_markov"] = np.array(results["lifetimes_markov"])
 
 # Save data to JSON
-saveDataToJson(results)
+#saveDataToJson(results)
 
 # Plot results
 plt.figure(figsize=(12, 8))
 for i, distance in enumerate(results["distances"]):
+    times_fseconds = results["times"][i] / (1.519 * emitterFrequency**2)
     # Real curve (non-Markovian)
     plt.plot(
-        results["times"][i] * (2 * np.pi / emitterFrequency),
+        times_fseconds,
         results["probabilities"][i],
-        label=f'z = {distance / emitterWavelength:.2f}λ (Simulation)'
-    )
-    # Lorentzian reference curve
-    plt.plot(
-        results["times"][i] * (2 * np.pi / emitterFrequency),
-        results["probabilities_lorentz"][i],
-        'k--',
-        label='Lorentzian (ref)' if i == 0 else ""
-    )
-    # Markovian reference curve
-    plt.plot(
-        results["times"][i] * (2 * np.pi / emitterFrequency),
-        results["probabilities_markov"][i],
-        'r:',
-        label='Markov (ref)' if i == 0 else ""
+        label=f'z = {distance / emitterWavelength:.5f}λ (Simulation)'
     )
 
-plt.xlabel('Time (units of $2\pi/\omega_0$)')
+plt.xlabel('Time (fs)')
 plt.ylabel('Probability $|c_e(t)|^2$')
 plt.title(f'Decay near Silver Slab (Thickness = {slabThickness} nm, λ = {emitterWavelength} nm)')
 plt.legend()
 plt.grid(True)
 plt.ylim(0, 1.1)
 
+times_fseconds = results["times"][0] / (1.519 * emitterFrequency**2)
+# Markovian reference curve
+plt.plot(
+        times_fseconds,
+        results["probabilities_markov"][0],
+        'r:',
+        label='Markov (ref)' if i == 0 else ""
+    )
+
 # Save and show plot
 if not os.path.exists('plots'):
     os.makedirs('plots')
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-plt.savefig(f'plots/probability_decay_{timestamp}.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plots/probability_decay_long_distances_{timestamp}.pdf', bbox_inches='tight')
 
+# Lorentzian reference curve
+plt.plot(
+    times_fseconds,
+    results["probabilities_lorentz"][0],
+        'k--',
+        label='Lorentzian (ref)' if i == 0 else ""
+)
+
+# Print lifetimes
+print("\nLifetimes (τ) for different models:")
+for i, distance in enumerate(results["distances"]):
+    print(f"Distance z = {distance:.2f} nm:")
+    if results['lifetimes'][i] is not None:
+        print(f"  - τ (Simulation)     = {results['lifetimes'][i] / (1.519 * emitterFrequency**2):.4f} fs")
+    if results['lifetimes_lorentz'][i] is not None:
+        print(f"  - τ (Lorentzian ref) = {results['lifetimes_lorentz'][i] / (1.519 * emitterFrequency**2):.4f} fs")
+    if results['lifetimes_markov'][i] is not None:
+        print(f"  - τ (Markov ref)     = {results['lifetimes_markov'][i] / (1.519 * emitterFrequency**2):.4f} fs")
 
 # Print execution time
 elapsedTime = time.time() - startTime
-print(f"Execution time: {elapsedTime:.2f} seconds")
+hours, rem = divmod(elapsedTime, 3600)
+minutes, seconds = divmod(rem, 60)
+print(f"Total execution time: {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}")
 
 plt.show()
